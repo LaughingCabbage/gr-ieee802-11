@@ -42,6 +42,7 @@ ether_encap_impl::ether_encap_impl(bool debug) :
 void
 ether_encap_impl::from_wifi(pmt::pmt_t msg) {
 
+<<<<<<< HEAD
     msg = pmt::cdr(msg);
 
     int data_len = pmt::blob_length(msg);
@@ -92,6 +93,32 @@ ether_encap_impl::from_wifi(pmt::pmt_t msg) {
     }
 
     free(buf);
+=======
+    //  this is the message from the mac.cc block
+    msg = pmt::cdr(msg);
+
+    int data_len = pmt::blob_length(msg);
+
+    //  this data HAS THE 14 bytes of ethernet header
+    uint8_t * data = (uint8_t *) pmt::blob_data(msg);
+
+    //  print out the ethernet header
+    std::cout << "\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+
+    std::cout << "this is the packet of len " << data_len << " in the from_wifi function " << std::endl;
+
+//    print_mac_header(mhdr);
+
+    investigate_packet(data + 14);
+
+
+    std::cout << "\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+
+
+//    pmt::pmt_t blob = pmt::make_blob(msg);
+    message_port_pub(pmt::mp("to tap"), pmt::cons(pmt::PMT_NIL, msg));
+
+>>>>>>> next
 }
 
 
@@ -100,11 +127,29 @@ ether_encap_impl::from_tap(pmt::pmt_t msg) {
     size_t len = pmt::blob_length(pmt::cdr(msg));
     const char *data = static_cast<const char *>(pmt::blob_data(pmt::cdr(msg)));
 
+<<<<<<< HEAD
     const ethernet_header *ehdr = reinterpret_cast<const ethernet_header *>(data);
 
     //	this is actually 0x0800 in the spec, but on little endian, this reverses
     switch (ehdr->type) {
         case 0x0008: {
+=======
+    //  print out the ethernet header
+    std::cout << "\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+
+    std::cout << "this is the packet of len " << len << " in the from_tap function" << std::endl;
+
+    investigate_packet((uint8_t *) (data + sizeof(ethernet_header)));
+
+    std::cout << "\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+
+    const ethernet_header *ehdr = reinterpret_cast<const ethernet_header *>(data);
+
+    //	this is actually 0x0800 in the spec, but on little endian, this reverses
+    //  note that ethernet follows big endian byte order for the network, as opposed to wifi
+    switch (ntohs(ehdr->type)) {
+        case 0x0800: {
+>>>>>>> next
 //            std::cout << "ether type: IP" << std::endl;
 
             char *buf = static_cast<char *>(malloc(len + 8 - sizeof(ethernet_header)));
@@ -125,7 +170,11 @@ ether_encap_impl::from_tap(pmt::pmt_t msg) {
             message_port_pub(pmt::mp("to wifi"), pmt::cons(pmt::PMT_NIL, blob));
             break;
         }
+<<<<<<< HEAD
         case 0x0608:
+=======
+        case 0x0806:
+>>>>>>> next
 //            std::cout << "ether type: ARP " << std::endl;
             break;
         default:
@@ -135,6 +184,46 @@ ether_encap_impl::from_tap(pmt::pmt_t msg) {
 
 
 }
+
+void ether_encap_impl::investigate_packet(uint8_t *data) {
+
+    print_ipv4(data);
+
+    struct iphdr *iph = (struct iphdr *) (data);
+
+    uint8_t ihl = iph->ihl;
+
+    uint8_t * transport_payload = (uint8_t *) (data + ihl * 4);
+
+    switch (iph->protocol) {
+
+        case 1: {
+            //  this is ICMP
+            handle_icmp(transport_payload, ihl, ntohs(iph->tot_len));
+            break;
+        }
+
+        case 6: {
+            //  this is TCP
+            handle_tcp(transport_payload, ihl, ntohs(iph->tot_len));
+            break;
+        }
+
+        case 17: {
+            //  this is UDP
+            handle_udp(transport_payload);
+            break;
+        }
+
+        default:
+            printf("\n\tnot TCP or IP!!\n");
+            break;
+    }
+
+
+}
+
+
 
 ether_encap::sptr
 ether_encap::make(bool debug) {

@@ -22,8 +22,11 @@
 #include <string>
 #include <arpa/inet.h>
 #include <linux/ip.h>
+<<<<<<< HEAD
 #include <linux/tcp.h>
 #include <linux/udp.h>
+=======
+>>>>>>> next
 
 using namespace gr::ieee802_11;
 
@@ -38,6 +41,11 @@ public:
             d_log(log), d_last_seq_no(-1),
             d_debug(debug) {
 
+<<<<<<< HEAD
+=======
+        d_debug = false;
+
+>>>>>>> next
         message_port_register_in(pmt::mp("in"));
         set_msg_handler(pmt::mp("in"), boost::bind(&parse_mac_impl::parse, this, _1));
 
@@ -49,6 +57,7 @@ public:
     }
 
 
+<<<<<<< HEAD
     void
     print_allascii(char *buf, int length) {
 
@@ -145,6 +154,9 @@ public:
         printf("\n\t>>> UDP header\n");
         printf("\tsrc %u\tdst %u\n", ntohs(udph->source), ntohs(udph->dest));
     }
+=======
+
+>>>>>>> next
 
     void parse(pmt::pmt_t msg) {
 
@@ -198,12 +210,17 @@ public:
         // DATA
         if ((((h->frame_control) >> 2) & 63) == 2) {
 
+<<<<<<< HEAD
             //  sizeof mac_header is 24
+=======
+//              sizeof mac_header is 24
+>>>>>>> next
             print_ascii(frame + 24, data_len - 24);
 
             // IMPORTANT: first 8 bytes are LLC header. ip packet starts at frame+sizeof(mac_header)+sizeof(llc_header) = frame+24+8=32
             struct llc_header * lhdr = (struct llc_header *) (frame + 24);
 
+<<<<<<< HEAD
             //  EtherType for IP is 0x0800
             if (0x0800 != ntohs(lhdr->type))
                 return;
@@ -247,6 +264,49 @@ public:
             }
 
             printf("------------------------------------------------------\n");
+=======
+            //  EtherType for IPv4 is 0x0800
+            if (0x0800 != ntohs(lhdr->type))
+                return;
+
+//            //  there is an IP packet inside this frame
+//            printf("------------------------------------------------------\n\n");
+//
+////            printf("raw decimal bytes\n");
+////            print_decbytes(frame + 24 + 8, data_len - 24 - 8);
+//
+////            printf("\tall hex bytes\n\t");
+////            print_allascii(frame + 24 + 8, data_len - 24 - 8);
+//
+//            print_ipv4(reinterpret_cast<uint8_t *>(frame + 24 + 8));
+//
+//            struct iphdr *iph = (struct iphdr *) (frame + 24 + 8);
+//
+//            uint8_t ihl = iph->ihl;
+//
+//            uint8_t *data = reinterpret_cast<uint8_t *>(frame + 24 + 8 + ihl * 4);
+//
+//            switch (iph->protocol) {
+//
+//                case 6: {
+//                    //  this is TCP
+//                    handle_tcp(data, ihl, ntohs(iph->tot_len));
+//                    break;
+//                }
+//
+//                case 17: {
+//                    //  this is UDP
+//                    handle_udp(data);
+//                    break;
+//                }
+//
+//                default:
+//                    printf("\n\tnot TCP or IP!!\n");
+//                    break;
+//            }
+//
+//            printf("------------------------------------------------------\n");
+>>>>>>> next
 
             // QoS Data
         } else if ((((h->frame_control) >> 2) & 63) == 34) {

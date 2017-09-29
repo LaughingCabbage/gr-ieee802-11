@@ -35,6 +35,12 @@ namespace gr {
 
             bool d_debug;
             uint16_t d_last_seq;
+<<<<<<< HEAD
+=======
+
+            void investigate_packet(uint8_t *data);
+
+>>>>>>> next
         };
 
     } // namespace ieee802_11
